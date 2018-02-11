@@ -1,7 +1,5 @@
 FROM ubuntu:xenial
 
-MAINTAINER Marc Hoersken "info@marc-hoersken.de"
-
 ENV DEBIAN_FRONTEND noninteractive
 RUN find /bin /sbin /usr/bin /usr/sbin /usr/local/bin /usr/local/sbin -perm /a+s -type f -execdir chmod a-s {} +
 
