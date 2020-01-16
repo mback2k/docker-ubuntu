@@ -1,0 +1,48 @@
+name: Publish Docker image
+
+on:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: '0 0 * * 6'
+
+jobs:
+  build-and-push:
+    strategy:
+      matrix:
+        env:
+          - BASE_TAG: xenial
+          - BASE_TAG: bionic
+          - BASE_TAG: focal
+          - BASE_TAG: rolling
+    runs-on: ubuntu-latest
+    env: ${{ matrix.env }}
+    steps:
+      - name: Checkout git repository
+        uses: actions/checkout@v1
+      - name: Describe git commit
+        run: >-
+          git describe --always --tags > ${HOME}/describe.txt
+      - name: Build the Docker image
+        run: >-
+          docker build . --file Dockerfile --build-arg BASE_TAG=${BASE_TAG}
+          --tag docker.pkg.github.com/${GITHUB_REPOSITORY}/${BASE_TAG}:latest
+          --tag docker.pkg.github.com/${GITHUB_REPOSITORY}/${BASE_TAG}:$(cat ${HOME}/describe.txt)
+      - name: Login to GitHub package Docker registry
+        shell: bash
+        run: >-
+          docker login
+          --username $(echo ${GITHUB_REPOSITORY} | cut -d/ -f1)
+          --password ${GITHUB_TOKEN} docker.pkg.github.com
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push the Docker image
+        run: >-
+          docker push docker.pkg.github.com/${GITHUB_REPOSITORY}/${BASE_TAG}
+      - name: Logout from Github package Docker registry
+        run: >-
+          docker logout docker.pkg.github.com
+      - name: Shred the Docker configuration file
+        run: >-
+          shred ${HOME}/.docker/config.json

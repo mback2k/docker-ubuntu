@@ -1,4 +1,6 @@
-FROM ubuntu:rolling
+ARG BASE_TAG=latest
+
+FROM ubuntu:${BASE_TAG}
 
 ENV DEBIAN_FRONTEND noninteractive
 RUN find /bin /sbin /usr/bin /usr/sbin /usr/local/bin /usr/local/sbin -perm /a+s -type f -execdir chmod a-s {} +
